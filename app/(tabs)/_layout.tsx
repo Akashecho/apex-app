@@ -1,5 +1,5 @@
 import { Tabs } from 'expo-router';
-import { Home, Users, CheckCircle, BookOpen, Menu } from 'lucide-react-native';
+import { Home, Users, CheckCircle, MessageSquare, Menu } from 'lucide-react-native';
 
 export default function TabsLayout() {
   return (
@@ -23,6 +23,13 @@ export default function TabsLayout() {
         }}
       />
       <Tabs.Screen
+        name="community"
+        options={{
+          title: 'Community',
+          tabBarIcon: ({ color }) => <MessageSquare color={color} size={24} />,
+        }}
+      />
+      <Tabs.Screen
         name="match"
         options={{
           title: 'Match',
@@ -37,19 +44,14 @@ export default function TabsLayout() {
         }}
       />
       <Tabs.Screen
-        name="learn"
-        options={{
-          title: 'Learn',
-          tabBarIcon: ({ color }) => <BookOpen color={color} size={24} />,
-        }}
-      />
-      <Tabs.Screen
         name="more"
         options={{
           title: 'More',
           tabBarIcon: ({ color }) => <Menu color={color} size={24} />,
         }}
       />
+      {/* Hidden tabs that we don't want in the bottom bar */}
+      <Tabs.Screen name="learn" options={{ href: null }} />
     </Tabs>
   );
 }

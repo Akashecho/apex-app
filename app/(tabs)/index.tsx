@@ -1,16 +1,76 @@
-import { View, Text, StyleSheet } from 'react-native';
+import React, { useState } from 'react';
+import { View, StyleSheet, ScrollView, RefreshControl } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
+import { Typography, GlassCard } from '../../src/components/ui';
+import { TodayMissionCard } from '../../src/components/home/TodayMissionCard';
+import { PodPulseCard } from '../../src/components/home/PodPulseCard';
+import { OpportunityCard } from '../../src/components/home/OpportunityCard';
+import { colors, spacing } from '../../src/config/theme';
+import { useAuthContext } from '../../src/providers/AuthProvider';
 
 export default function IntelScreen() {
+  const { userData } = useAuthContext();
+  const [refreshing, setRefreshing] = useState(false);
+  const [missionComplete, setMissionComplete] = useState(false);
+
+  const onRefresh = React.useCallback(() => {
+    setRefreshing(true);
+    setTimeout(() => setRefreshing(false), 1000);
+  }, []);
+
   return (
     <SafeAreaView style={styles.container}>
-      <Text style={styles.title}>Home / Intel</Text>
-      <Text style={styles.subtitle}>Your daily command center</Text>
-      
-      <View style={styles.card}>
-        <Text style={styles.cardTitle}>Today's Mission</Text>
-        <Text style={styles.cardText}>Check in with your pod</Text>
-      </View>
+      <ScrollView 
+        contentContainerStyle={styles.scrollContent}
+        refreshControl={
+          <RefreshControl refreshing={refreshing} onRefresh={onRefresh} />
+        }
+      >
+        <View style={styles.header}>
+          <Typography variant="headingLarge" style={styles.greeting}>
+            Good morning, {userData?.displayName?.split(' ')[0] || 'Builder'}.
+          </Typography>
+          <View style={styles.badgeContainer}>
+            <View style={styles.scoreBadge}>
+              <Typography variant="labelSmall" color={colors.light.textMuted}>APEX SCORE</Typography>
+              <Typography variant="headingSmall" style={{marginLeft: 6}}>{userData?.apexScore || 0}</Typography>
+            </View>
+          </View>
+        </View>
+
+        <TodayMissionCard 
+          mission="Complete your weekly pod check-in"
+          isCompleted={missionComplete}
+          onComplete={() => setMissionComplete(true)}
+        />
+
+        <PodPulseCard />
+
+        <View style={styles.section}>
+          <Typography variant="headingSmall" style={styles.sectionTitle}>
+            Action Required
+          </Typography>
+          <OpportunityCard 
+            title="Software Engineering Intern (Summer 2026)"
+            company="Stripe • Bangalore"
+            deadlineText="Expires in 12 hours"
+            tags={['Remote', 'High Match']}
+            type="internship"
+          />
+        </View>
+
+        <View style={styles.section}>
+          <Typography variant="headingSmall" style={styles.sectionTitle}>
+            Match Suggestion
+          </Typography>
+          <GlassCard style={{ padding: spacing.lg }}>
+            <Typography variant="bodyMedium" color={colors.light.textMuted} align="center">
+              Complete your profile to unlock member introductions.
+            </Typography>
+          </GlassCard>
+        </View>
+        
+      </ScrollView>
     </SafeAreaView>
   );
 }
@@ -18,42 +78,42 @@ export default function IntelScreen() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#F8F1E7',
-    padding: 16,
+    backgroundColor: colors.light.bg,
   },
-  title: {
-    fontSize: 32,
-    fontWeight: '700',
-    color: '#16181D',
-    marginTop: 24,
+  scrollContent: {
+    padding: spacing.xl,
+    paddingBottom: spacing['4xl'],
   },
-  subtitle: {
-    fontSize: 16,
-    color: '#6B717E',
-    marginTop: 4,
-    marginBottom: 32,
+  header: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    marginTop: spacing.sm,
+    marginBottom: spacing['2xl'],
   },
-  card: {
-    backgroundColor: '#FFFFFF',
-    padding: 24,
+  greeting: {
+    flex: 1,
+    marginRight: spacing.md,
+  },
+  badgeContainer: {
+    flexDirection: 'row',
+    alignItems: 'center',
+  },
+  scoreBadge: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: colors.light.bgSoft,
+    paddingHorizontal: spacing.md,
+    paddingVertical: spacing.xs,
     borderRadius: 20,
-    shadowColor: 'rgba(15, 23, 42, 0.08)',
-    shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 1,
-    shadowRadius: 12,
-    elevation: 4,
+    borderWidth: 1,
+    borderColor: colors.light.borderSubtle,
   },
-  cardTitle: {
-    fontSize: 14,
-    fontWeight: '600',
-    color: '#6B717E',
-    textTransform: 'uppercase',
-    letterSpacing: 0.5,
+  section: {
+    marginTop: spacing.xl,
   },
-  cardText: {
-    fontSize: 20,
-    fontWeight: '600',
-    color: '#16181D',
-    marginTop: 8,
+  sectionTitle: {
+    marginBottom: spacing.md,
+    color: colors.light.text,
   },
 });

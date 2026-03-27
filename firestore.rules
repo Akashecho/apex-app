@@ -1,0 +1,249 @@
+rules_version = '2';
+
+service cloud.firestore {
+  match /databases/{database}/documents {
+
+    // Helper functions
+    function isSignedIn() {
+      return request.auth != null;
+    }
+
+    function isOwner(userId) {
+      return request.auth.uid == userId;
+    }
+
+    function isAdmin() {
+      return isSignedIn() && get(/databases/$(database)/documents/users/$(request.auth.uid)).data.isAdmin == true;
+    }
+
+    function isActiveMember() {
+      return isSignedIn() && get(/databases/$(database)/documents/users/$(request.auth.uid)).data.membershipStatus == 'active';
+    }
+
+    // Users collection
+    match /users/{userId} {
+      allow read: if isSignedIn() && (isOwner(userId) || isAdmin());
+      allow create: if isOwner(userId);
+      allow update: if isOwner(userId) || isAdmin();
+      allow delete: if isAdmin();
+    }
+
+    // Public profiles (read by any member)
+    match /profiles/{userId} {
+      allow read: if isSignedIn();
+      allow write: if isOwner(userId);
+    }
+
+    // Invites
+    match /invites/{inviteId} {
+      allow read: if isSignedIn();
+      allow create: if isSignedIn();
+      allow update: if isSignedIn() && (resource.data.createdBy == request.auth.uid || isAdmin());
+    }
+
+    // Applications
+    match /applications/{applicationId} {
+      allow read: if isSignedIn() && (resource.data.userId == request.auth.uid || isAdmin());
+      allow create: if isSignedIn() && request.resource.data.userId == request.auth.uid;
+      allow update: if isSignedIn() && (resource.data.userId == request.auth.uid || isAdmin());
+    }
+
+    // Memberships
+    match /memberships/{membershipId} {
+      allow read: if isSignedIn() && (resource.data.userId == request.auth.uid || isAdmin());
+      allow create: if isAdmin();
+      allow update: if isAdmin();
+    }
+
+    // Passport snapshots
+    match /passport_snapshots/{snapshotId} {
+      allow read: if isSignedIn();
+      allow write: if isAdmin();
+    }
+
+    // Achievements
+    match /achievements/{achievementId} {
+      allow read: if isSignedIn();
+      allow create: if isSignedIn() && request.resource.data.userId == request.auth.uid;
+      allow update: if isSignedIn() && (resource.data.userId == request.auth.uid || isAdmin());
+    }
+
+    // Score events
+    match /score_events/{eventId} {
+      allow read: if isSignedIn() && (resource.data.userId == request.auth.uid || isAdmin());
+      allow create: if isAdmin();
+    }
+
+    // Tracks (read-only for members)
+    match /tracks/{trackId} {
+      allow read: if isSignedIn();
+      allow write: if isAdmin();
+    }
+
+    // Pods
+    match /pods/{podId} {
+      allow read: if isSignedIn();
+      allow create: if isAdmin();
+      allow update: if isSignedIn() && (
+        resource.data.captainId == request.auth.uid ||
+        request.auth.uid in resource.data.memberIds ||
+        isAdmin()
+      );
+    }
+
+    // Pod check-ins
+    match /pod_checkins/{checkinId} {
+      allow read: if isSignedIn();
+      allow create: if isSignedIn() && request.resource.data.userId == request.auth.uid;
+      allow update: if isSignedIn() && resource.data.userId == request.auth.uid;
+    }
+
+    // Channels (community)
+    match /channels/{channelId} {
+      allow read: if isSignedIn();
+      allow write: if isAdmin();
+    }
+
+    // Posts
+    match /posts/{postId} {
+      allow read: if isSignedIn();
+      allow create: if isActiveMember() && request.resource.data.authorId == request.auth.uid;
+      allow update: if isSignedIn() && (resource.data.authorId == request.auth.uid || isAdmin());
+      allow delete: if isAdmin();
+
+      // Comments sub-collection
+      match /comments/{commentId} {
+        allow read: if isSignedIn();
+        allow create: if isActiveMember() && request.resource.data.authorId == request.auth.uid;
+        allow update: if isSignedIn() && (resource.data.authorId == request.auth.uid || isAdmin());
+        allow delete: if isAdmin();
+      }
+
+      // Votes sub-collection (doc ID = oderId for uniqueness)
+      match /votes/{oderId} {
+        allow read: if isSignedIn();
+        allow create: if isActiveMember() && oderId == request.auth.uid;
+        allow update: if isSignedIn() && oderId == request.auth.uid;
+        allow delete: if isSignedIn() && oderId == request.auth.uid;
+      }
+    }
+
+    // Chat rooms
+    match /chat_rooms/{roomId} {
+      allow read: if isSignedIn() && request.auth.uid in resource.data.memberIds;
+      allow create: if isSignedIn();
+      allow update: if isSignedIn() && request.auth.uid in resource.data.memberIds;
+    }
+
+    // Resources
+    match /resources/{resourceId} {
+      allow read: if isSignedIn();
+      allow create: if isActiveMember();
+      allow update: if isSignedIn() && (resource.data.authorId == request.auth.uid || isAdmin());
+    }
+
+    // Events
+    match /events/{eventId} {
+      allow read: if isSignedIn();
+      allow write: if isAdmin();
+    }
+
+    // Event attendance
+    match /event_attendance/{attendanceId} {
+      allow read: if isSignedIn();
+      allow create: if isSignedIn() && request.resource.data.userId == request.auth.uid;
+      allow update: if isSignedIn() && (resource.data.userId == request.auth.uid || isAdmin());
+    }
+
+    // Opportunities
+    match /opportunities/{opportunityId} {
+      allow read: if isSignedIn();
+      allow create: if isActiveMember() || isAdmin();
+      allow update: if isAdmin();
+    }
+
+    // Opportunity actions
+    match /opportunity_actions/{actionId} {
+      allow read: if isSignedIn() && resource.data.userId == request.auth.uid;
+      allow create: if isSignedIn() && request.resource.data.userId == request.auth.uid;
+      allow update: if isSignedIn() && resource.data.userId == request.auth.uid;
+    }
+
+    // Matches
+    match /matches/{matchId} {
+      allow read: if isSignedIn() && request.auth.uid in resource.data.userIds;
+      allow write: if isAdmin();
+    }
+
+    // Intro requests
+    match /intro_requests/{requestId} {
+      allow read: if isSignedIn() && (
+        resource.data.fromUserId == request.auth.uid ||
+        resource.data.toUserId == request.auth.uid
+      );
+      allow create: if isActiveMember() && request.resource.data.fromUserId == request.auth.uid;
+      allow update: if isSignedIn() && (
+        resource.data.fromUserId == request.auth.uid ||
+        resource.data.toUserId == request.auth.uid
+      );
+    }
+
+    // DM Threads
+    match /threads/{threadId} {
+      allow read: if isSignedIn() && request.auth.uid in resource.data.participantIds;
+      allow create: if isActiveMember();
+      allow update: if isSignedIn() && request.auth.uid in resource.data.participantIds;
+    }
+
+    // AI actions
+    match /ai_actions/{actionId} {
+      allow read: if isSignedIn() && resource.data.userId == request.auth.uid;
+      allow create: if isSignedIn() && request.resource.data.userId == request.auth.uid;
+    }
+
+    // AI credit ledger
+    match /ai_credit_ledger/{entryId} {
+      allow read: if isSignedIn() && resource.data.userId == request.auth.uid;
+      allow write: if isAdmin();
+    }
+
+    // Reports
+    match /reports/{reportId} {
+      allow read: if isSignedIn() && (resource.data.reportedBy == request.auth.uid || isAdmin());
+      allow create: if isSignedIn() && request.resource.data.reportedBy == request.auth.uid;
+      allow update: if isAdmin();
+    }
+
+    // Moderation cases
+    match /moderation_cases/{caseId} {
+      allow read: if isSignedIn() && (resource.data.userId == request.auth.uid || isAdmin());
+      allow write: if isAdmin();
+    }
+
+    // Chapter nodes
+    match /chapter_nodes/{chapterId} {
+      allow read: if isSignedIn();
+      allow write: if isAdmin();
+    }
+
+    // Notifications
+    match /notifications/{notificationId} {
+      allow read: if isSignedIn() && resource.data.userId == request.auth.uid;
+      allow create: if isAdmin();
+      allow update: if isSignedIn() && resource.data.userId == request.auth.uid;
+    }
+
+    // Challenges
+    match /challenges/{challengeId} {
+      allow read: if isSignedIn();
+      allow write: if isAdmin();
+    }
+
+    // Challenge submissions
+    match /challenge_submissions/{submissionId} {
+      allow read: if isSignedIn() && (resource.data.oderId == request.auth.uid || isAdmin());
+      allow create: if isActiveMember() && request.resource.data.oderId == request.auth.uid;
+      allow update: if isAdmin();
+    }
+  }
+}

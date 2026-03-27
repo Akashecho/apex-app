@@ -1,29 +1,47 @@
-import { View, Text, TouchableOpacity, StyleSheet } from 'react-native';
+import React from 'react';
+import { View, StyleSheet, TouchableOpacity } from 'react-native';
 import { useRouter } from 'expo-router';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import { LinearGradient } from 'expo-linear-gradient';
+import { GradientHero, Button, Typography } from '../../src/components/ui';
+import { colors, spacing } from '../../src/config/theme';
 
 export default function WelcomeScreen() {
   const router = useRouter();
 
   return (
-    <SafeAreaView style={styles.container}>
-      <LinearGradient
-        colors={['#FDE1C3', '#F9C9B0', '#D9C0F0']}
+    <SafeAreaView style={styles.container} edges={['top', 'bottom']}>
+      <GradientHero 
+        title="APEX"
+        subtitle="The invite-only merit network for top students"
         style={styles.hero}
-      >
-        <Text style={styles.logo}>APEX</Text>
-        <Text style={styles.tagline}>The invite-only merit network for top students</Text>
-      </LinearGradient>
+      />
 
       <View style={styles.content}>
-        <TouchableOpacity style={styles.applyButton} onPress={() => router.push('/(auth)/apply')}>
-          <Text style={styles.applyText}>Apply for Admission</Text>
-        </TouchableOpacity>
+        <View style={styles.info}>
+          <Typography variant="headingMedium" align="center" style={styles.tagline}>
+            Entry is earned.
+          </Typography>
+          <Typography variant="bodyLarge" align="center" color={colors.light.textMuted} style={styles.description}>
+            Proof of work, trajectory, and a contribution mindset are required for admission.
+          </Typography>
+        </View>
 
-        <TouchableOpacity style={styles.loginButton} onPress={() => router.push('/(auth)/login')}>
-          <Text style={styles.loginText}>Sign In</Text>
-        </TouchableOpacity>
+        <View style={styles.actions}>
+          <Button 
+            title="Apply for Admission" 
+            size="lg"
+            onPress={() => router.push('/(auth)/apply')}
+            style={styles.button}
+          />
+          
+          <Button 
+            title="Sign In" 
+            variant="outline"
+            size="lg"
+            onPress={() => router.push('/(auth)/login')}
+            style={styles.button}
+          />
+        </View>
       </View>
     </SafeAreaView>
   );
@@ -32,60 +50,32 @@ export default function WelcomeScreen() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#F8F1E7',
+    backgroundColor: colors.light.bg,
   },
   hero: {
-    flex: 2,
-    justifyContent: 'center',
-    alignItems: 'center',
-    padding: 32,
-  },
-  logo: {
-    fontSize: 48,
-    fontWeight: '700',
-    color: '#16181D',
-    marginBottom: 16,
-    letterSpacing: -1,
-  },
-  tagline: {
-    fontSize: 22,
-    fontWeight: '500',
-    color: '#16181D',
-    textAlign: 'center',
-    opacity: 0.8,
+    flex: 0.45,
   },
   content: {
-    flex: 1,
-    padding: 32,
-    justifyContent: 'center',
-    gap: 16,
+    flex: 0.55,
+    padding: spacing['2xl'],
+    justifyContent: 'space-between',
   },
-  applyButton: {
-    backgroundColor: '#E3173E',
-    padding: 18,
-    borderRadius: 20,
+  info: {
+    marginTop: spacing.xl,
     alignItems: 'center',
-    shadowColor: 'rgba(227, 23, 62, 0.4)',
-    shadowOffset: { width: 0, height: 8 },
-    shadowOpacity: 1,
-    shadowRadius: 16,
-    elevation: 4,
   },
-  applyText: {
-    color: '#FFFFFF',
-    fontSize: 18,
-    fontWeight: '600',
+  tagline: {
+    marginBottom: spacing.md,
   },
-  loginButton: {
-    padding: 18,
-    borderRadius: 20,
-    alignItems: 'center',
-    borderWidth: 1,
-    borderColor: 'rgba(12, 16, 28, 0.12)',
+  description: {
+    lineHeight: 24,
+    paddingHorizontal: spacing.md,
   },
-  loginText: {
-    color: '#16181D',
-    fontSize: 18,
-    fontWeight: '600',
+  actions: {
+    gap: spacing.lg,
+    marginBottom: spacing.xl,
+  },
+  button: {
+    shadowColor: 'transparent',
   },
 });

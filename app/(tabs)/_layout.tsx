@@ -52,6 +52,7 @@ export default function TabsLayout() {
       />
       {/* Hidden tabs that we don't want in the bottom bar */}
       <Tabs.Screen name="learn" options={{ href: null }} />
+      <Tabs.Screen name="opportunities" options={{ href: null }} />
     </Tabs>
   );
 }
